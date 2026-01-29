@@ -12,3 +12,6 @@ Thumbs.db
 # Laravel testbench / cache
 bootstrap/cache/
 storage/
+
+# Locks
+composer.lock
