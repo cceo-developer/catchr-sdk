@@ -1,0 +1,14 @@
+/vendor/
+/.idea/
+/.vscode/
+/.DS_Store
+Thumbs.db
+
+# PHPUnit / coverage
+.phpunit.result.cache
+/.phpunit.cache/
+/coverage/
+
+# Laravel testbench / cache
+bootstrap/cache/
+storage/

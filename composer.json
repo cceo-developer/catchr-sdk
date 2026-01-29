@@ -1,0 +1,24 @@
+{
+  "name": "cceo-developer/catchr",
+  "description": "Global error catcher for Laravel apps (Catchr).",
+  "type": "library",
+  "license": "proprietary",
+  "require": {
+    "php": "^8.2",
+    "illuminate/support": "^10.0|^11.0|^12.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "CceoDeveloper\\Catchr\\": "src/"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "CceoDeveloper\\Catchr\\CatchrServiceProvider"
+      ]
+    }
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}
