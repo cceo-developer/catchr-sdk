@@ -1,7 +1,11 @@
 <?php
 
 return [
-    'enabled' => true,
+    'enabled' => env('CATCHR_ENABLED', true),
+
     'endpoint' => env('CATCHR_ENDPOINT'),
-    'timeout' => 5,
+
+    'timeout' => (int) env('CATCHR_TIMEOUT', 5),
+
+    'environments' => array_filter(explode(',', env('CATCHR_ENVS', 'local,staging,production'))),
 ];

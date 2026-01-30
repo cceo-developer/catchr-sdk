@@ -3,7 +3,6 @@
 namespace CceoDeveloper\Catchr\Support;
 
 use Illuminate\Contracts\Debug\ExceptionHandler;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -24,7 +23,9 @@ class WrappedExceptionHandler implements ExceptionHandler
         self::$seen[$id] = true;
 
         try {
-            if (Config::get('catchr.enabled', true) && $this->inner->shouldReport($e)) {
+            if ($this->inner->shouldReport($e)) {
+                (new HttpReporter())->report($e);
+
                 Log::error('[Catchr] Captured exception', [
                     'type' => get_class($e),
                     'message' => $e->getMessage(),
