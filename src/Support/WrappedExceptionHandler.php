@@ -2,22 +2,16 @@
 
 namespace CceoDeveloper\Catchr\Support;
 
+use Carbon\Carbon;
 use Illuminate\Contracts\Debug\ExceptionHandler;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
-class WrappedExceptionHandler implements ExceptionHandler
+readonly class WrappedExceptionHandler implements ExceptionHandler
 {
-    /** @var array<int, int> id => unix_ts */
-    private static array $seen = [];
-
-    private const SEEN_TTL_SECONDS = 30;
-    private const SEEN_MAX = 256;
-    private const GC_EVERY = 25;
-
-    private static int $counter = 0;
-
-    public function __construct(private readonly ExceptionHandler $inner) {}
+    public function __construct(private ExceptionHandler $inner) {}
 
     public function report(Throwable $e): void
     {
@@ -46,40 +40,68 @@ class WrappedExceptionHandler implements ExceptionHandler
 
     private function alreadySeen(Throwable $e): bool
     {
-        $id = spl_object_id($e);
-        $now = time();
-
-        self::$counter++;
-        if (self::$counter % self::GC_EVERY === 0) {
-            $this->prune($now);
+        $dedupeEnabled = (bool) Config::get('catchr.dedupe.enabled', true);
+        if (! $dedupeEnabled) {
+            return false;
         }
 
-        if (isset(self::$seen[$id]) && ($now - self::$seen[$id]) <= self::SEEN_TTL_SECONDS) {
-            return true;
-        }
+        $ttl = (int) Config::get('catchr.dedupe.ttl_seconds', 300);
+        $prefix = (string) Config::get('catchr.dedupe.prefix', 'catchr:seen:');
+        $store = Config::get('catchr.dedupe.cache_store');
 
-        self::$seen[$id] = $now;
+        $key = $prefix . $this->fingerprint($e);
 
-        if (count(self::$seen) > self::SEEN_MAX) {
-            $this->prune($now, aggressive: true);
-        }
+        $cache = $store ? Cache::store($store) : Cache::store();
 
-        return false;
+        $firstTime = $cache->add($key, 1, Carbon::now()->addSeconds($ttl));
+
+        return $firstTime === false;
     }
 
-    private function prune(int $now, bool $aggressive = false): void
+
+    private function fingerprint(Throwable $e): string
     {
-        foreach (self::$seen as $id => $ts) {
-            if (($now - $ts) > self::SEEN_TTL_SECONDS) {
-                unset(self::$seen[$id]);
-            }
+        $top = $e->getTrace()[0] ?? [];
+
+        $message = $this->normalizeMessage($e->getMessage());
+
+        $payload = [
+            'type' => get_class($e),
+            'message' => $message,
+            'code' => (string) $e->getCode(),
+            'file' => $e->getFile(),
+            'line' => (string) $e->getLine(),
+            'top_file' => $top['file'] ?? null,
+            'top_line' => isset($top['line']) ? (string) $top['line'] : null,
+            'top_fn' => $top['function'] ?? null,
+            'top_class' => $top['class'] ?? null,
+        ];
+
+        return hash('sha256', json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+    }
+
+    private function normalizeMessage(string $message): string
+    {
+        $doNormalize = (bool) Config::get('catchr.dedupe.normalize_message', true);
+        if (! $doNormalize) {
+            return $message;
         }
 
-        if ($aggressive && count(self::$seen) > self::SEEN_MAX) {
-            arsort(self::$seen);
-            self::$seen = array_slice(self::$seen, 0, self::SEEN_MAX, true);
+        $uuidNormalized = preg_replace(
+            '/\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/i',
+            '{uuid}',
+            $message
+        );
+
+        if ($uuidNormalized === null) {
+            return $message;
         }
+
+        $numbersNormalized = preg_replace('/\b\d{4,}\b/', '{n}', $uuidNormalized);
+
+        return $numbersNormalized ?? $uuidNormalized;
     }
+
 
     public function shouldReport(Throwable $e): bool
     {

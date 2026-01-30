@@ -23,7 +23,7 @@ class PayloadBuilder
                 'code' => $e->getCode(),
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
-                'code_snippet' => $this->codeSnippet($e->getFile(), $e->getLine(), 6),
+                'code_snippet' => $this->codeSnippet($e->getFile(), $e->getLine()),
                 'trace' => collect($e->getTrace())->all()
             ],
         ];
@@ -153,7 +153,7 @@ class PayloadBuilder
         return mb_strlen($value) > $max ? mb_substr($value, 0, $max) . '…' : $value;
     }
 
-    private function codeSnippet(?string $file, ?int $line, int $padding = 6): ?array
+    private function codeSnippet(?string $file, ?int $line, int $padding = 10): ?array
     {
         if (!$file || !$line) return null;
         if (!is_file($file) || !is_readable($file)) return null;
