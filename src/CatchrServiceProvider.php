@@ -2,19 +2,31 @@
 
 namespace CceoDeveloper\Catchr;
 
+use CceoDeveloper\Catchr\Support\WrappedExceptionHandler;
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Support\ServiceProvider;
 
 class CatchrServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->mergeConfigFrom(__DIR__ . '/../config/catchr.php', 'catchr');
+        $packageBase = dirname(__DIR__);
+
+        $this->mergeConfigFrom($packageBase . '/config/catchr.php', 'catchr');
+
+        $this->app->extend(ExceptionHandler::class, function ($handler) {
+            return $handler instanceof WrappedExceptionHandler
+                ? $handler
+                : new WrappedExceptionHandler($handler);
+        });
     }
 
     public function boot(): void
     {
+        $packageBase = dirname(__DIR__);
+
         $this->publishes([
-            __DIR__ . '/../config/catchr.php' => $this->app->configPath('catchr.php'),
+            $packageBase . '/config/catchr.php' => $this->app->configPath('catchr.php'),
         ], 'catchr-config');
     }
 }
