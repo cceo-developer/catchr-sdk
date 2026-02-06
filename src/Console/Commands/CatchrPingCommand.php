@@ -12,7 +12,7 @@ class CatchrPingCommand extends Command
 {
     protected $signature = 'catchr:ping
         {--timeout= : Override timeout in seconds (default: config catchr.timeout)}
-        {--no-abort : No abort even if Catchr is disabled o env not allowed}';
+        {--no-abort : No abort even if Catchr is disabled or env not allowed}';
 
     protected $description = 'Send a lightweight ping payload to all Catchr endpoints.';
 
