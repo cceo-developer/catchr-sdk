@@ -47,13 +47,25 @@ class CatchrTestCommand extends Command
             };
         };
 
-        $trigger();
-
         if ($dedupe) {
-            $this->warn('Triggering the same error again to test dedupe...');
-            $trigger();
+            $this->warn('Triggering the same error twice to test dedupe...');
+
+            $handler = app(\Illuminate\Contracts\Debug\ExceptionHandler::class);
+            $hadError = false;
+
+            foreach ([1, 2] as $i) {
+                try {
+                    $trigger();
+                } catch (\Throwable $e) {
+                    $hadError = true;
+                    $handler->report($e);
+                }
+            }
+
+            return $hadError ? self::FAILURE : self::SUCCESS;
         }
 
+        $trigger();
         return self::SUCCESS;
     }
 
