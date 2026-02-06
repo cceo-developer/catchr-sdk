@@ -31,8 +31,19 @@ class CatchrPingCommand extends Command
         $envs = array_values(array_filter(array_map('trim', $envs)));
         $envAllowed = empty($envs) ? true : in_array($appEnv, $envs, true);
 
-        $timeout = (int) ($this->option('timeout') ?: Config::get('catchr.timeout', 5));
+        $timeoutConfig = Config::get('catchr.timeout', 5);
+        $timeout = is_numeric($timeoutConfig) && (int) $timeoutConfig >= 1
+            ? (int) $timeoutConfig
+            : 5;
 
+        $timeoutOption = $this->option('timeout');
+        if ($timeoutOption !== null && $timeoutOption !== '') {
+            if (is_numeric($timeoutOption) && (int) $timeoutOption >= 1) {
+                $timeout = (int) $timeoutOption;
+            } else {
+                $this->warn('Invalid --timeout option; using default timeout.');
+            }
+        }
         $this->info('Catchr ping');
         $this->line(str_repeat('-', 24));
         $this->line('Enabled: ' . ($enabled ? '<info>true</info>' : '<comment>false</comment>'));
