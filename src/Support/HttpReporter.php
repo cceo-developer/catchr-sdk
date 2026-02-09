@@ -17,10 +17,10 @@ readonly class HttpReporter
         $appEnv = Config::get('app.env');
         $endpoints = Config::get('catchr.endpoints', []);
         $timeout = (int) Config::get('catchr.timeout', 5);
-        $public = (string) Config::get('catchr.public_key');
-        $private = (string) Config::get('catchr.private_key');
+        $public = trim((string) Config::get('catchr.public_key'));
+        $private = trim((string) Config::get('catchr.private_key'));
 
-        if (!$public && !$private) {
+        if ($public === '' || $private === '') {
             return;
         }
 
