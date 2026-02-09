@@ -11,15 +11,16 @@ class CatchrTestCommand extends Command
     protected $signature = 'catchr:test
         {--type=exception : Type error: exception|sql|typeerror|zero}
         {--message= : Custom message (only for type=exception)}
-        {--dedupe : Execute the same error twice to test dedupe}
         {--no-abort : Do not abort even if configuration is missing}';
 
     protected $description = 'Trigger a test error to verify Catchr reporting.';
 
+    /**
+     * @throws \Exception
+     */
     public function handle(): int
     {
         $type = (string) $this->option('type');
-        $dedupe = (bool) $this->option('dedupe');
         $noAbort = (bool) $this->option('no-abort');
         $message = (string) ($this->option('message') ?? 'boom from catchr:test');
 
@@ -36,34 +37,10 @@ class CatchrTestCommand extends Command
             return self::FAILURE;
         }
 
-        $this->info("Triggering test error (type={$type}, dedupe=" . ($dedupe ? 'true' : 'false') . ")");
+        $this->info("Triggering test error type={$type}");
 
-        $trigger = function () use ($type, $message) {
-            match ($type) {
-                'sql' => DB::select('select * from this_table_does_not_exist'),
-                'typeerror' => $this->triggerTypeError(),
-                'zero' => $this->triggerDivisionByZero(),
-                default => throw new \Exception($message),
-            };
-        };
+        $this->trigger($type, $message);
 
-        if ($dedupe) {
-            $this->warn('Triggering the same error twice to test dedupe...');
-
-            $handler = app(\Illuminate\Contracts\Debug\ExceptionHandler::class);
-            $hadError = false;
-
-            try {
-                $trigger();
-            } catch (\Throwable $e) {
-                $hadError = true;
-                $handler->report($e);
-            }
-
-            return $hadError ? self::FAILURE : self::SUCCESS;
-        }
-
-        $trigger();
         return self::SUCCESS;
     }
 
@@ -135,6 +112,16 @@ class CatchrTestCommand extends Command
             'endpoints_count' => count($endpoints),
             'env_allowed' => $envAllowed,
         ];
+    }
+
+    private function trigger($type, $message): void
+    {
+            match ($type) {
+                'sql' => DB::select('select * from this_table_does_not_exist'),
+                'typeerror' => $this->triggerTypeError(),
+                'zero' => $this->triggerDivisionByZero(),
+                default => throw new \Exception($message),
+            };
     }
 
     private function triggerTypeError(): void
