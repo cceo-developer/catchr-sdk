@@ -49,8 +49,8 @@ class CatchrTestCommand extends Command
     {
         $enabled = (bool) Config::get('catchr.enabled', true);
 
-        $public = (bool) Config::get('catchr.public_key');
-        $private = (bool) Config::get('catchr.private_key');
+        $public = trim((string) Config::get('catchr.public_key', '')) !== '';
+        $private = trim((string) Config::get('catchr.private_key', '')) !== '';
 
         $endpoints = Config::get('catchr.endpoints', []);
         if (!is_array($endpoints)) $endpoints = [];
