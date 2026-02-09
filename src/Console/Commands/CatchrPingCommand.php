@@ -19,6 +19,8 @@ class CatchrPingCommand extends Command
     public function handle(): int
     {
         $enabled = (bool) Config::get('catchr.enabled', true);
+        $public = trim((string) Config::get('catchr.public_key', ''));
+        $private = trim((string) Config::get('catchr.private_key', ''));
         $endpoints = Config::get('catchr.endpoints', []);
         $envs = Config::get('catchr.environments', []);
         $appEnv = (string) Config::get('app.env', '');
@@ -51,10 +53,17 @@ class CatchrPingCommand extends Command
         $this->line('Env allowed: ' . ($envAllowed ? '<info>true</info>' : '<comment>false</comment>'));
         $this->line('Timeout: <comment>' . $timeout . "s</comment>");
         $this->line('Endpoints: <comment>' . count($endpoints) . '</comment>');
+        $this->line('Public key: ' . ($public !== '' ? '<info>true</info>' : '<error>false</error>'));
+        $this->line('Private key: ' . ($private !== '' ? '<info>true</info>' : '<error>false</error>'));
         $this->line('');
 
         if (count($endpoints) === 0) {
             $this->error('No endpoints configured (CATCHR_ENDPOINTS is empty).');
+            return self::FAILURE;
+        }
+
+        if ($public === '' || $private === '') {
+            $this->error('No keys configured (CATCHR_PUBLIC_KEY or CATCHR_PRIVATE_KEY is empty).');
             return self::FAILURE;
         }
 
@@ -76,14 +85,13 @@ class CatchrPingCommand extends Command
         $ok = 0;
         $fail = 0;
 
+        $http = Http::timeout($timeout)->acceptJson()->asJson()->withBasicAuth($public, $private);
+
         foreach ($endpoints as $endpoint) {
             $start = microtime(true);
 
             try {
-                $response = Http::timeout($timeout)
-                    ->acceptJson()
-                    ->asJson()
-                    ->post($endpoint, $payload);
+                $response = $http->post($endpoint, $payload);
 
                 $ms = (int) round((microtime(true) - $start) * 1000);
 
