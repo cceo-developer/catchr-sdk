@@ -2,6 +2,8 @@
 
 namespace CceoDeveloper\Catchr;
 
+use CceoDeveloper\Catchr\Console\Commands\CatchrPingCommand;
+use CceoDeveloper\Catchr\Console\Commands\CatchrTestCommand;
 use CceoDeveloper\Catchr\Support\WrappedExceptionHandler;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Support\ServiceProvider;
@@ -28,5 +30,12 @@ class CatchrServiceProvider extends ServiceProvider
         $this->publishes([
             $packageBase . '/config/catchr.php' => $this->app->configPath('catchr.php'),
         ], 'catchr-config');
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                CatchrTestCommand::class,
+                CatchrPingCommand::class
+            ]);
+        }
     }
 }

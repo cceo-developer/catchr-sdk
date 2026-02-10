@@ -17,4 +17,7 @@ return [
         'prefix' => env('CATCHR_DEDUPE_PREFIX', 'catchr:seen:'),
         'normalize_message' => (bool) env('CATCHR_DEDUPE_NORMALIZE_MESSAGE', true),
     ],
+
+    'public_key' => env('CATCHR_PUBLIC_KEY', null),
+    'private_key' => env('CATCHR_PRIVATE_KEY', null),
 ];

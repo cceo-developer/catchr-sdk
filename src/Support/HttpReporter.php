@@ -17,6 +17,12 @@ readonly class HttpReporter
         $appEnv = Config::get('app.env');
         $endpoints = Config::get('catchr.endpoints', []);
         $timeout = (int) Config::get('catchr.timeout', 5);
+        $public = trim((string) Config::get('catchr.public_key'));
+        $private = trim((string) Config::get('catchr.private_key'));
+
+        if ($public === '' || $private === '') {
+            return;
+        }
 
         if (!is_array($endpoints)) {
             $endpoints = [];
@@ -45,12 +51,11 @@ readonly class HttpReporter
 
         $payload = $this->builder->build($e, $request);
 
+        $http = Http::timeout($timeout)->acceptJson()->asJson()->withBasicAuth($public, $private);
+
         foreach ($endpoints as $endpoint) {
             try {
-                Http::timeout($timeout)
-                    ->acceptJson()
-                    ->asJson()
-                    ->post($endpoint, $payload);
+                $http->post($endpoint, $payload);
             } catch (Throwable $ignored) {
                 @error_log('[Catchr] Failed to post to endpoint: ' . $endpoint . ' | ' . get_class($ignored) . ' - ' . $ignored->getMessage());
             }
