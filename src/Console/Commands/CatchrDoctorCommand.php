@@ -367,7 +367,7 @@ class CatchrDoctorCommand extends Command
         $msg = strtolower($e->getMessage());
 
         // Common Laravel HTTP client exceptions/messages
-        if (str_contains($msg, 'cound not resolve host') || str_contains($msg, 'could not resolve host')) {
+        if (str_contains($msg, 'could not resolve host') || str_contains($msg, 'could not resolve host')) {
             return 'DNS issue: check domain name and network';
         }
 
