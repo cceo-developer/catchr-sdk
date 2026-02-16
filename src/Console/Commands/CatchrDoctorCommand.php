@@ -99,11 +99,11 @@ class CatchrDoctorCommand extends Command
 
     private function checkDedupeConfig(): void
     {
-        $enabled    = (bool) Config::get('catchr.dedupe.enabled');
-        $ttl        = (int) Config::get('catchr.dedupe.ttl_seconds');
-        $store      = Config::get('catchr.dedupe.cache_store');
-        $prefix     = (string) Config::get('catchr.dedupe.prefix');
-        $normalize  = (bool) Config::get('catchr.dedupe.normalize_message');
+        $enabled    = (bool) Config::get('catchr.dedupe.enabled', true);
+        $ttl        = (int) Config::get('catchr.dedupe.ttl_seconds', 300);
+        $store      = Config::get('catchr.dedupe.cache_store', null);
+        $prefix     = (string) Config::get('catchr.dedupe.prefix', 'catchr:seen:');
+        $normalize  = (bool) Config::get('catchr.dedupe.normalize_message', true);
 
         $this->section('Dedupe config');
 
