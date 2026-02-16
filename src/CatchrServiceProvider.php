@@ -2,7 +2,7 @@
 
 namespace CceoDeveloper\Catchr;
 
-use CceoDeveloper\Catchr\Console\Commands\CatchrPingCommand;
+use CceoDeveloper\Catchr\Console\Commands\CatchrDoctorCommand;
 use CceoDeveloper\Catchr\Console\Commands\CatchrTestCommand;
 use CceoDeveloper\Catchr\Support\WrappedExceptionHandler;
 use Illuminate\Contracts\Debug\ExceptionHandler;
@@ -34,7 +34,7 @@ class CatchrServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
             $this->commands([
                 CatchrTestCommand::class,
-                CatchrPingCommand::class
+                CatchrDoctorCommand::class
             ]);
         }
     }
