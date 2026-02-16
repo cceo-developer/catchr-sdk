@@ -47,7 +47,7 @@ class CatchrDoctorCommand extends Command
 
     private function checkRequiredConfig(): void
     {
-        $enabled   = (bool) Config::get('catchr.enabled');
+        $enabled   = (bool) Config::get('catchr.enabled', true);
         $public    = (string) (Config::get('catchr.public_key') ?? '');
         $private   = (string) (Config::get('catchr.private_key') ?? '');
         $timeout   = (int) Config::get('catchr.timeout', 5);
