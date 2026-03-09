@@ -52,7 +52,7 @@ class QueueJobMeta
         ];
     }
 
-    public static function jobPayload(Job $job)
+    public static function jobPayload(Job $job): array
     {
         return $job->payload();
     }
