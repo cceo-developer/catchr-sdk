@@ -15,7 +15,7 @@ readonly class QueueReporter
     {
         $envs = Config::get('catchr.environments', []);
         $appEnv = Config::get('app.env');
-        $endpoints = Config::get('catchr.endpoints', []);
+        $endpoints = Config::get('catchr.queue.endpoints', []);
         $timeout = (int) Config::get('catchr.timeout', 5);
         $public = trim((string) Config::get('catchr.public_key'));
         $private = trim((string) Config::get('catchr.private_key'));

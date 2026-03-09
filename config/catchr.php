@@ -23,6 +23,7 @@ return [
         'report_processing' => (bool) env('CATCHR_QUEUE_REPORT_PROCESSING', true),
         'report_processed' => (bool) env('CATCHR_QUEUE_REPORT_PROCESSED', true),
         'report_failed' => (bool) env('CATCHR_QUEUE_REPORT_FAILED', true),
+        'endpoints' => array_values(array_filter(array_map('trim', explode(',', (string) env('CATCHR_QUEUE_ENDPOINTS', ''))))),
     ],
 
     'public_key' => env('CATCHR_PUBLIC_KEY', null),
