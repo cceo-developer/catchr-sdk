@@ -18,6 +18,7 @@ class TrackJobProcessing
             }
 
             $meta = QueueJobMeta::extract($event->job, $event->connectionName);
+            $job = QueueJobMeta::jobPayload($event->job);
 
             (new JobRunStore())->markProcessing($meta);
 
@@ -28,12 +29,12 @@ class TrackJobProcessing
                     'queue' => $meta['queue'],
                     'job_name' => $meta['job_name'],
                     'job_id' => $meta['job_id'],
-                    'uuid' => $meta['uuid'],
                     'attempts' => $meta['attempts'],
                     'max_tries' => $meta['max_tries'],
                     'timeout' => $meta['timeout'],
                     'run_key' => $meta['run_key'],
                     'status' => 'processing',
+                    'job' => $job,
                 ],
                 exception: null
             );

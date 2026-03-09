@@ -51,4 +51,10 @@ class QueueJobMeta
             'timeout' => is_null($timeout) ? null : (int) $timeout,
         ];
     }
+
+    public static function jobPayload(Job $job): array
+    {
+        return $job->payload();
+    }
+
 }
