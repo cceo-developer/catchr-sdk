@@ -2,7 +2,6 @@
 
 namespace CceoDeveloper\Catchr\Support\Logging;
 
-use Carbon\Carbon;
 use CceoDeveloper\Catchr\Support\PayloadBuilder;
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Level;
