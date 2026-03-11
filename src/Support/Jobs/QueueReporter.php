@@ -2,8 +2,9 @@
 
 namespace CceoDeveloper\Catchr\Support\Jobs;
 
+use CceoDeveloper\Catchr\Support\CatchrConfig;
 use CceoDeveloper\Catchr\Support\PayloadBuilder;
-use Illuminate\Support\Facades\Config;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Throwable;
 
@@ -13,40 +14,34 @@ readonly class QueueReporter
 
     public function report(string $event, array $jobMeta, ?Throwable $exception = null): void
     {
-        $envs = Config::get('catchr.environments', []);
-        $appEnv = Config::get('app.env');
-        $endpoints = Config::get('catchr.queue.endpoints', []);
-        $timeout = (int) Config::get('catchr.timeout', 5);
-        $public = trim((string) Config::get('catchr.public_key'));
-        $private = trim((string) Config::get('catchr.private_key'));
-
-        if ($public === '' || $private === '') {
+        $ctx = CatchrConfig::for('queue');
+        if (!$ctx->canSend()) {
             return;
         }
 
-        if (!is_array($endpoints)) {
-            $endpoints = [];
+        $request = null;
+        try {
+            $candidate = app()->bound('request') ? app('request') : null;
+            if ($candidate instanceof Request && $candidate->method()) {
+                $request = $candidate;
+            }
+        } catch (Throwable $ignored) {
+            @error_log(
+                '[Catchr] Failed to get request method: ' .
+                get_class($ignored) . ' - ' . $ignored->getMessage()
+            );
         }
-
-        if (!Config::get('catchr.enabled', true) || empty($endpoints)) {
-            return;
-        }
-
-        if (!empty($envs) && $appEnv && !in_array($appEnv, $envs, true)) {
-            return;
-        }
-
-        if (!Config::get('catchr.queue.enabled', true)) return;
 
         $payload = $this->builder->buildQueueEvent(
             event: $event,
             jobMeta: $jobMeta,
             exception: $exception,
+            request: $request,
         );
 
-        $http = Http::timeout($timeout)->acceptJson()->asJson()->withBasicAuth($public, $private);
+        $http = Http::timeout($ctx->timeout)->acceptJson()->asJson()->withBasicAuth($ctx->publicKey, $ctx->privateKey);
 
-        foreach ($endpoints as $endpoint) {
+        foreach ($ctx->endpoints as $endpoint) {
             try {
                 $http->post($endpoint, $payload);
             } catch (Throwable $ignored) {

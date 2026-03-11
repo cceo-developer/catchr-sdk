@@ -36,33 +36,10 @@ class PayloadBuilder
             ];
         }
 
-        if ($request) {
-            $payload['http'] = [
-                'method' => $request->method(),
-                'url' => $request->fullUrl(),
-                'path' => $request->path(),
-                'ip' => $request->ip(),
-                'route' => optional($request->route())->uri(),
-                'route_name' => optional($request->route())->getName(),
-                'parameters' => [
-                    'query' => $this->sanitize($request->query()),
-                    'body' => $this->sanitize($request->all()),
-                ],
-                'headers' => $this->sanitizeHeaders($request->headers->all()),
-                'server' => $this->sanitizeServer($request->server->all()),
-            ];
-
-            $user = $request->user() ?? Auth::guard('api')->user() ?? Auth::guard('web')->user();
-
-            if($user) {
-                $payload['user'] = $user;
-            }
-        }
-
-        return $payload;
+        return $this->addRequest($request, $payload);
     }
 
-    public function buildQueueEvent(string $event, array $jobMeta, ?Throwable $exception = null): array
+    public function buildQueueEvent(string $event, array $jobMeta, ?Throwable $exception = null, ?Request $request = null): array
     {
         $payload = [
             'type' => $event, // ex: queue.failed
@@ -82,7 +59,7 @@ class PayloadBuilder
             ];
         }
 
-        return $payload;
+        return $this->addRequest($request, $payload);
     }
 
     public function buildLogEvent(LogRecord $record): array
@@ -101,6 +78,39 @@ class PayloadBuilder
                 'datetime' => $record->datetime->format(DATE_ATOM),
             ],
         ];
+    }
+
+    /**
+     * @param Request|null $request
+     * @param array $payload
+     * @return array
+     */
+    public function addRequest(?Request $request, array $payload): array
+    {
+        if ($request) {
+            $payload['http'] = [
+                'method' => $request->method(),
+                'url' => $request->fullUrl(),
+                'path' => $request->path(),
+                'ip' => $request->ip(),
+                'route' => optional($request->route())->uri(),
+                'route_name' => optional($request->route())->getName(),
+                'parameters' => [
+                    'query' => $this->sanitize($request->query()),
+                    'body' => $this->sanitize($request->all()),
+                ],
+                'headers' => $this->sanitizeHeaders($request->headers->all()),
+                'server' => $this->sanitizeServer($request->server->all()),
+            ];
+
+            $user = $request->user() ?? Auth::guard('api')->user() ?? Auth::guard('web')->user();
+
+            if ($user) {
+                $payload['user'] = $user;
+            }
+        }
+
+        return $payload;
     }
 
     private function sanitizeHeaders(array $headers): array

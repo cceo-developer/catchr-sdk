@@ -2,9 +2,9 @@
 
 namespace CceoDeveloper\Catchr\Support\Exceptions;
 
+use CceoDeveloper\Catchr\Support\CatchrConfig;
 use CceoDeveloper\Catchr\Support\PayloadBuilder;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 use Throwable;
 
@@ -14,26 +14,8 @@ readonly class HttpReporter
 
     public function report(Throwable $e): void
     {
-        $envs = Config::get('catchr.environments', []);
-        $appEnv = Config::get('app.env');
-        $endpoints = Config::get('catchr.endpoints', []);
-        $timeout = (int) Config::get('catchr.timeout', 5);
-        $public = trim((string) Config::get('catchr.public_key'));
-        $private = trim((string) Config::get('catchr.private_key'));
-
-        if ($public === '' || $private === '') {
-            return;
-        }
-
-        if (!is_array($endpoints)) {
-            $endpoints = [];
-        }
-
-        if (!Config::get('catchr.enabled', true) || empty($endpoints)) {
-            return;
-        }
-
-        if (!empty($envs) && $appEnv && !in_array($appEnv, $envs, true)) {
+        $ctx = CatchrConfig::for('exception');
+        if (!$ctx->canSend()) {
             return;
         }
 
@@ -45,20 +27,20 @@ readonly class HttpReporter
             }
         } catch (Throwable $ignored) {
             @error_log(
-                '[Catchr] Failed to report exception: ' .
+                '[Catchr] Failed to get request method: ' .
                 get_class($ignored) . ' - ' . $ignored->getMessage()
             );
         }
 
         $payload = $this->builder->build($e, $request);
 
-        $http = Http::timeout($timeout)->acceptJson()->asJson()->withBasicAuth($public, $private);
+        $http = Http::timeout($ctx->timeout)->acceptJson()->asJson()->withBasicAuth($ctx->publicKey, $ctx->privateKey);
 
-        foreach ($endpoints as $endpoint) {
+        foreach ($ctx->endpoints as $endpoint) {
             try {
                 $http->post($endpoint, $payload);
             } catch (Throwable $ignored) {
-                @error_log('[Catchr] Failed to post to endpoint: ' . $endpoint . ' | ' . get_class($ignored) . ' - ' . $ignored->getMessage());
+                @error_log('[Catchr] Failed to post exception event: ' . $endpoint . ' | ' . get_class($ignored) . ' - ' . $ignored->getMessage());
             }
         }
     }
