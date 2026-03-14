@@ -22,7 +22,7 @@ readonly class WrappedExceptionHandler implements ExceptionHandler
 
         try {
             if ($this->inner->shouldReport($e)) {
-                (new HttpReporter())->report($e);
+                (new ExceptionReporter())->report($e);
                 Log::error('[Catchr] Captured exception', [
                     'type' => get_class($e),
                     'message' => $e->getMessage(),

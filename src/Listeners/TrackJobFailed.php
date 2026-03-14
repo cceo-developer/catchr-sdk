@@ -2,7 +2,7 @@
 
 namespace CceoDeveloper\Catchr\Listeners;
 
-use CceoDeveloper\Catchr\Support\Exceptions\HttpReporter;
+use CceoDeveloper\Catchr\Support\Exceptions\ExceptionReporter;
 use CceoDeveloper\Catchr\Support\Jobs\JobRunStore;
 use CceoDeveloper\Catchr\Support\Jobs\QueueJobMeta;
 use CceoDeveloper\Catchr\Support\Jobs\QueueReporter;
@@ -41,7 +41,7 @@ class TrackJobFailed
                 exception: $event->exception
             );
 
-            (new HttpReporter())->report($event->exception);
+            (new ExceptionReporter())->report($event->exception);
         } catch (Throwable $ignored) {
             @error_log('[Catchr] Failed to track job failed: ' . get_class($ignored) . ' - ' . $ignored->getMessage());
         }

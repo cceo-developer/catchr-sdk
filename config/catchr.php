@@ -10,8 +10,8 @@ return [
 
     'exception' => [
         'enabled' => env('CATCHR_EXCEPTION_ENABLED', true),
-        'endpoints' => array_values(array_filter(array_map('trim', explode(',', (string) env('CATCHR_ENDPOINTS', ''))))),
-        'timeout' => (int) env('CATCHR_TIMEOUT', 5),
+        'endpoints' => array_values(array_filter(array_map('trim', explode(',', (string) env('CATCHR_EXCEPTION_ENDPOINTS', ''))))),
+        'timeout' => (int) env('CATCHR_EXCEPTION_TIMEOUT', 5),
         'dedupe' => [
             'enabled' => (bool) env('CATCHR_EXCEPTION_DEDUPE_ENABLED', true),
             'ttl_seconds' => (int) env('CATCHR_EXCEPTION_DEDUPE_TTL', 300),
