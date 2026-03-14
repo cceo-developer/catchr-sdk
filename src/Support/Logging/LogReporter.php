@@ -5,7 +5,6 @@ namespace CceoDeveloper\Catchr\Support\Logging;
 use CceoDeveloper\Catchr\Support\PayloadBuilder;
 use CceoDeveloper\Catchr\Support\Reporter\Reporter;
 use CceoDeveloper\Catchr\Support\Reporter\ReporterConfigFactory;
-use Illuminate\Http\Request;
 use Monolog\LogRecord;
 
 class LogReporter extends Reporter
