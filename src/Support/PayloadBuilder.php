@@ -3,6 +3,7 @@
 namespace CceoDeveloper\Catchr\Support;
 
 use Carbon\Carbon;
+use Monolog\LogRecord;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -35,6 +36,57 @@ class PayloadBuilder
             ];
         }
 
+        return $this->addRequest($request, $payload);
+    }
+
+    public function buildQueueEvent(string $event, array $jobMeta, ?Throwable $exception = null, ?Request $request = null): array
+    {
+        $payload = [
+            'type' => $event, // ex: queue.failed
+            'app' => Config::get('app.name'),
+            'env' => Config::get('app.env'),
+            'timestamp' => Carbon::now()->toIso8601String(),
+            'queue' => $jobMeta,
+        ];
+
+        if ($exception) {
+            $payload['exception'] = [
+                'type' => get_class($exception),
+                'message' => $exception->getMessage(),
+                'code' => $exception->getCode(),
+                'file' => $exception->getFile(),
+                'line' => $exception->getLine(),
+            ];
+        }
+
+        return $this->addRequest($request, $payload);
+    }
+
+    public function buildLogEvent(LogRecord $record): array
+    {
+        return [
+            'type' => 'log.message',
+            'app' => Config::get('app.name'),
+            'env' => Config::get('app.env'),
+            'timestamp' => Carbon::now()->toIso8601String(),
+            'log' => [
+                'logger' => $record->channel,
+                'level' => $record->level->getName(),
+                'message' => (string) $record->message,
+                'context' => $record->context ?? null,
+                'extra' => $record->extra ?? [],
+                'datetime' => $record->datetime->format(DATE_ATOM),
+            ],
+        ];
+    }
+
+    /**
+     * @param Request|null $request
+     * @param array $payload
+     * @return array
+     */
+    private function addRequest(?Request $request, array $payload): array
+    {
         if ($request) {
             $payload['http'] = [
                 'method' => $request->method(),
@@ -53,7 +105,7 @@ class PayloadBuilder
 
             $user = $request->user() ?? Auth::guard('api')->user() ?? Auth::guard('web')->user();
 
-            if($user) {
+            if ($user) {
                 $payload['user'] = $user;
             }
         }

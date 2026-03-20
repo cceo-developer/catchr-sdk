@@ -1,6 +1,6 @@
 <?php
 
-namespace CceoDeveloper\Catchr\Support;
+namespace CceoDeveloper\Catchr\Support\Exceptions;
 
 use Carbon\Carbon;
 use Illuminate\Contracts\Debug\ExceptionHandler;
@@ -22,7 +22,7 @@ readonly class WrappedExceptionHandler implements ExceptionHandler
 
         try {
             if ($this->inner->shouldReport($e)) {
-                (new HttpReporter())->report($e);
+                (new ExceptionReporter())->report($e);
                 Log::error('[Catchr] Captured exception', [
                     'type' => get_class($e),
                     'message' => $e->getMessage(),
@@ -40,14 +40,14 @@ readonly class WrappedExceptionHandler implements ExceptionHandler
 
     private function alreadySeen(Throwable $e): bool
     {
-        $dedupeEnabled = (bool) Config::get('catchr.dedupe.enabled', true);
+        $dedupeEnabled = (bool) Config::get('catchr.exception.dedupe.enabled', true);
         if (! $dedupeEnabled) {
             return false;
         }
 
-        $ttl = (int) Config::get('catchr.dedupe.ttl_seconds', 300);
-        $prefix = (string) Config::get('catchr.dedupe.prefix', 'catchr:seen:');
-        $store = Config::get('catchr.dedupe.cache_store');
+        $ttl = (int) Config::get('catchr.exception.dedupe.ttl_seconds', 300);
+        $prefix = (string) Config::get('catchr.exception.dedupe.prefix', 'catchr:seen:');
+        $store = Config::get('catchr.exception.dedupe.cache_store');
 
         $key = $prefix . $this->fingerprint($e);
 
@@ -82,7 +82,7 @@ readonly class WrappedExceptionHandler implements ExceptionHandler
 
     private function normalizeMessage(string $message): string
     {
-        $doNormalize = (bool) Config::get('catchr.dedupe.normalize_message', true);
+        $doNormalize = (bool) Config::get('catchr.exception.dedupe.normalize_message', true);
         if (! $doNormalize) {
             return $message;
         }

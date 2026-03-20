@@ -4,8 +4,10 @@ namespace CceoDeveloper\Catchr;
 
 use CceoDeveloper\Catchr\Console\Commands\CatchrDoctorCommand;
 use CceoDeveloper\Catchr\Console\Commands\CatchrTestCommand;
-use CceoDeveloper\Catchr\Support\WrappedExceptionHandler;
+use CceoDeveloper\Catchr\Support\Exceptions\WrappedExceptionHandler;
 use Illuminate\Contracts\Debug\ExceptionHandler;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\ServiceProvider;
 
 class CatchrServiceProvider extends ServiceProvider
@@ -37,5 +39,19 @@ class CatchrServiceProvider extends ServiceProvider
                 CatchrDoctorCommand::class
             ]);
         }
+
+        $this->loadMigrationsFrom($packageBase . '/database/migrations');
+
+        Queue::before(function (\Illuminate\Queue\Events\JobProcessing $event) {
+            App::make(\CceoDeveloper\Catchr\Listeners\TrackJobProcessing::class)->handle($event);
+        });
+
+        Queue::after(function (\Illuminate\Queue\Events\JobProcessed $event) {
+            App::make(\CceoDeveloper\Catchr\Listeners\TrackJobProcessed::class)->handle($event);
+        });
+
+        Queue::failing(function (\Illuminate\Queue\Events\JobFailed $event) {
+            App::make(\CceoDeveloper\Catchr\Listeners\TrackJobFailed::class)->handle($event);
+        });
     }
 }
