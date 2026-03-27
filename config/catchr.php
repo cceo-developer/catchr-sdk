@@ -2,7 +2,9 @@
 
 return [
     'enabled' => env('CATCHR_ENABLED', true),
-    'environments' => array_values(array_filter(array_map('trim', explode(',', (string) env('CATCHR_ENVS', 'local,staging,production'))))),
+    'environments' => array_values(array_filter(array_map('trim', explode(',', (string) env('CATCHR_ENVS', 'staging,production'))))),
+    'public_key' => env('CATCHR_PUBLIC_KEY', null),
+    'private_key' => env('CATCHR_PRIVATE_KEY', null),
 
     'redact_headers' => ['authorization', 'cookie', 'set-cookie', 'x-csrf-token', 'x-xsrf-token',],
     'redact_keys' => ['password', 'password_confirmation', 'token', 'access_token', 'refresh_token', 'authorization', 'cookie', 'ssn',],
@@ -23,19 +25,16 @@ return [
 
     'queue' => [
         'enabled' => (bool) env('CATCHR_QUEUE_ENABLED', true),
+        'endpoints' => array_values(array_filter(array_map('trim', explode(',', (string) env('CATCHR_QUEUE_ENDPOINTS', 'https://api.catchr.dev/api/jobs'))))),
+        'timeout' => (int) env('CATCHR_QUEUE_TIMEOUT', 5),
         'report_processing' => (bool) env('CATCHR_QUEUE_REPORT_PROCESSING', true),
         'report_processed' => (bool) env('CATCHR_QUEUE_REPORT_PROCESSED', true),
         'report_failed' => (bool) env('CATCHR_QUEUE_REPORT_FAILED', true),
-        'endpoints' => array_values(array_filter(array_map('trim', explode(',', (string) env('CATCHR_QUEUE_ENDPOINTS', 'https://api.catchr.dev/api/jobs'))))),
-        'timeout' => (int) env('CATCHR_TIMEOUT', 5),
     ],
 
     'log' => [
         'enabled' => (bool) env('CATCHR_LOG_ENABLED', true),
         'endpoints' => array_values(array_filter(array_map('trim', explode(',', (string) env('CATCHR_LOG_ENDPOINTS', 'https://api.catchr.dev/api/logs'))))),
-        'timeout' => (int) env('CATCHR_TIMEOUT', 5),
+        'timeout' => (int) env('CATCHR_LOG_TIMEOUT', 5),
     ],
-
-    'public_key' => env('CATCHR_PUBLIC_KEY', null),
-    'private_key' => env('CATCHR_PRIVATE_KEY', null),
 ];
